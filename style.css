@@ -1001,6 +1001,32 @@ select:focus {
   display: block;
 }
 
+body.print-mode {
+  background: #ffffff;
+}
+
+body.print-mode #app-shell {
+  display: none;
+}
+
+body.print-mode #print-root {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px;
+  background: #ffffff;
+  z-index: 9999;
+}
+
+body.print-mode #print-root.print-offscreen {
+  left: -10000px;
+}
+
 .print-doc {
   font-family: "Inter", sans-serif;
   color: #0f172a;

@@ -1526,12 +1526,36 @@ function buildJobReportHTML(job) {
     </div>`;
 }
 
+function waitForNextFrame() {
+  return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
+function waitForImages(root) {
+  if (!root) return Promise.resolve();
+  const images = Array.from(root.querySelectorAll("img"));
+  if (!images.length) return Promise.resolve();
+  return Promise.all(images.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      const done = () => resolve();
+      img.addEventListener("load", done, { once: true });
+      img.addEventListener("error", done, { once: true });
+    });
+  }));
+}
+
+function waitForPrintReady(root) {
+  const fontsReady = document.fonts?.ready?.catch(() => {}) || Promise.resolve();
+  return Promise.all([waitForNextFrame(), waitForImages(root), fontsReady]);
+}
+
 function preparePrintRoot(html, { offscreen = false } = {}) {
   const root = $("#print-root");
   if (!root) return null;
   root.innerHTML = html;
   root.classList.remove("hidden");
   root.classList.toggle("print-offscreen", offscreen);
+  document.body.classList.add("print-mode");
   root.getBoundingClientRect();
   return root;
 }
@@ -1542,6 +1566,7 @@ function cleanupPrintRoot() {
   root.classList.add("hidden");
   root.classList.remove("print-offscreen");
   root.innerHTML = "";
+  document.body.classList.remove("print-mode");
 }
 
 function printQuote(id) {
@@ -1551,13 +1576,28 @@ function printQuote(id) {
   const root = preparePrintRoot(buildQuotePrintHTML(quote));
   if (!root) return;
 
-  const handleAfterPrint = () => {
+  let cleaned = false;
+  const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
     cleanupPrintRoot();
     window.removeEventListener("afterprint", handleAfterPrint);
+    document.removeEventListener("visibilitychange", handleVisibility);
+    clearTimeout(fallbackTimer);
+  };
+
+  const handleAfterPrint = () => cleanup();
+  const handleVisibility = () => {
+    if (document.visibilityState === "visible") cleanup();
   };
 
   window.addEventListener("afterprint", handleAfterPrint);
-  window.print();
+  document.addEventListener("visibilitychange", handleVisibility);
+  const fallbackTimer = setTimeout(() => cleanup(), 15000);
+
+  waitForPrintReady(root)
+    .then(() => window.print())
+    .catch(() => window.print());
 }
 
 function downloadQuotePdf(id) {
@@ -1578,7 +1618,8 @@ function downloadQuotePdf(id) {
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   };
-  window.html2pdf().set(options).from(root).save()
+  waitForPrintReady(root)
+    .then(() => window.html2pdf().set(options).from(root).save())
     .then(() => cleanupPrintRoot())
     .catch(() => {
       cleanupPrintRoot();
@@ -1603,7 +1644,8 @@ function downloadJobReportPdf(id) {
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   };
-  window.html2pdf().set(options).from(root).save()
+  waitForPrintReady(root)
+    .then(() => window.html2pdf().set(options).from(root).save())
     .then(() => cleanupPrintRoot())
     .catch(() => {
       cleanupPrintRoot();
