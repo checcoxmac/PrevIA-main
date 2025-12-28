@@ -215,6 +215,7 @@ const ui = {
   wizardCliente: "",
   activeQuoteId: state.selectedQuoteId || state.quotes[0]?.id || null,
 };
+let printScrollY = null;
 
 function saveState() {
   safeStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1549,9 +1550,13 @@ function waitForPrintReady(root) {
   return Promise.all([waitForNextFrame(), waitForImages(root), fontsReady]);
 }
 
-function preparePrintRoot(html, { offscreen = false } = {}) {
+function preparePrintRoot(html, { offscreen = false, scrollToTop = false } = {}) {
   const root = $("#print-root");
   if (!root) return null;
+  if (scrollToTop) {
+    printScrollY = window.scrollY;
+    window.scrollTo(0, 0);
+  }
   root.innerHTML = html;
   root.classList.remove("hidden");
   root.classList.toggle("print-offscreen", offscreen);
@@ -1567,13 +1572,18 @@ function cleanupPrintRoot() {
   root.classList.remove("print-offscreen");
   root.innerHTML = "";
   document.body.classList.remove("print-mode");
+  if (printScrollY !== null) {
+    window.scrollTo(0, printScrollY);
+    printScrollY = null;
+  }
 }
 
 function printQuote(id) {
   const quote = state.quotes.find(q => q.id === id);
   if (!quote) return;
   recalcQuoteTotals(quote);
-  const root = preparePrintRoot(buildQuotePrintHTML(quote));
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  const root = preparePrintRoot(buildQuotePrintHTML(quote), { scrollToTop: isMobile });
   if (!root) return;
 
   let cleaned = false;
@@ -1608,14 +1618,23 @@ function downloadQuotePdf(id) {
     return;
   }
   recalcQuoteTotals(quote);
-  const root = preparePrintRoot(buildQuotePrintHTML(quote), { offscreen: true });
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  const root = preparePrintRoot(buildQuotePrintHTML(quote), { offscreen: !isMobile, scrollToTop: isMobile });
   if (!root) return;
   const filename = `preventivo_${quote.number || quote.id}.pdf`;
+  const rootWidth = root.scrollWidth || root.offsetWidth || 0;
+  const rootHeight = root.scrollHeight || root.offsetHeight || 0;
   const options = {
     margin: 10,
     filename,
     image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: {
+      scale: isMobile ? 1.2 : 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      windowWidth: rootWidth || undefined,
+      windowHeight: rootHeight || undefined,
+    },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   };
   waitForPrintReady(root)
@@ -1634,14 +1653,23 @@ function downloadJobReportPdf(id) {
     showToast("Download PDF non disponibile");
     return;
   }
-  const root = preparePrintRoot(buildJobReportHTML(job), { offscreen: true });
+  const isMobile = window.matchMedia("(max-width: 767px)").matches;
+  const root = preparePrintRoot(buildJobReportHTML(job), { offscreen: !isMobile, scrollToTop: isMobile });
   if (!root) return;
   const filename = `report_pagamenti_${job.commessa || job.id}.pdf`;
+  const rootWidth = root.scrollWidth || root.offsetWidth || 0;
+  const rootHeight = root.scrollHeight || root.offsetHeight || 0;
   const options = {
     margin: 10,
     filename,
     image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: {
+      scale: isMobile ? 1.2 : 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      windowWidth: rootWidth || undefined,
+      windowHeight: rootHeight || undefined,
+    },
     jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   };
   waitForPrintReady(root)
