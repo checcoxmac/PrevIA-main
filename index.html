@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PrevIA Works</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div id="app-shell" class="app-layout">
+    <!-- HEADER (top, su mobile e desktop) -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-brand">
+          <svg class="brand-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PrevIA Works logo">
+            <defs>
+              <linearGradient id="grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7C6FF9" />
+                <stop offset="50%" stop-color="#5B55FF" />
+                <stop offset="100%" stop-color="#1E1B4B" />
+              </linearGradient>
+              <linearGradient id="grad-accent" x1="20%" y1="0%" x2="100%" y2="80%">
+                <stop offset="0%" stop-color="#34D399" />
+                <stop offset="100%" stop-color="#10B981" />
+              </linearGradient>
+            </defs>
+            <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#grad-primary)" opacity="0.18" />
+            <path d="M18 20h22c4 0 8 3 8 8s-4 8-8 8H26" fill="none" stroke="url(#grad-primary)" stroke-width="3" stroke-linecap="round" />
+            <path d="M18 36h16c5 0 9 3 9 8s-4 8-9 8H18" fill="none" stroke="url(#grad-primary)" stroke-width="3" stroke-linecap="round" />
+            <circle cx="24" cy="20" r="3" fill="url(#grad-accent)" />
+            <path d="M33 32l6 6 9-13" fill="none" stroke="url(#grad-accent)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <div class="header-title">
+            <p class="header-main brand-wordmark">PrevIA Works</p>
+            <p class="header-sub" id="company-name-chip">La tua ditta</p>
+          </div>
+        </div>
+        <div class="header-actions no-print">
+          <div id="header-logo-container" class="hidden" style="margin-right: 8px;"></div>
+          <span id="storage-pill" class="pill-warning hidden">⚠ Storage offline</span>
+          <button id="btn-header-diagnostic" type="button" class="btn-ghost btn-compact" aria-label="Diagnostica">Diagnostica</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- SIDEBAR (desktop only) -->
+    <aside id="sidebar" class="sidebar">
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-btn active" data-tab="home" aria-label="Home">
+          <i class="fa-solid fa-house"></i>
+          <span>Home</span>
+        </button>
+        <button type="button" class="nav-btn" data-tab="jobs" aria-label="Lavori">
+          <i class="fa-solid fa-briefcase"></i>
+          <span>Lavori</span>
+        </button>
+        <button type="button" class="nav-btn" data-tab="quotes" aria-label="Preventivi">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Preventivi</span>
+        </button>
+        <button type="button" class="nav-btn" data-tab="history" aria-label="Storico">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Storico</span>
+        </button>
+        <button type="button" class="nav-btn" data-tab="settings" aria-label="Impostazioni">
+          <i class="fa-solid fa-gear"></i>
+          <span>Altro</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" class="app-main">
+      <div class="content-inner">
+
+        <!-- HOME VIEW -->
+        <section id="view-home" class="view-section hidden">
+          <div class="screen-head">
+            <div>
+              <h1 class="screen-title">Home</h1>
+              <p class="screen-subtitle">Panoramica rapida su lavori, incassi e acquisti</p>
+            </div>
+            <button id="btn-home-new" type="button" class="btn-main btn-compact">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+
+          <!-- KPI -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="kpi-card">
+              <p class="kpi-label">Totale da incassare</p>
+              <p id="kpi-due" class="kpi-value">0 €</p>
+            </div>
+            <div class="kpi-card">
+              <p class="kpi-label">Entrate mese</p>
+              <p id="kpi-income" class="kpi-value text-emerald-600">0 €</p>
+            </div>
+            <div class="kpi-card">
+              <p class="kpi-label">Uscite mese</p>
+              <p id="kpi-outcome" class="kpi-value text-rose-600">0 €</p>
+            </div>
+          </div>
+
+          <!-- QUICK ACTIONS -->
+          <div id="quick-actions" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+
+          <!-- CHART -->
+          <div class="surface chart-surface">
+            <div class="surface-head">
+              <div>
+                <h3 class="surface-title">Andamento 12 mesi</h3>
+                <p class="text-sm text-slate-500">Entrate vs uscite</p>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="kpi-chart" height="160" aria-label="Grafico entrate e uscite"></canvas>
+            </div>
+          </div>
+
+          <!-- OPEN JOBS -->
+          <div class="surface">
+            <div class="surface-head">
+              <div>
+                <h3 class="surface-title">Lavori aperti</h3>
+              </div>
+              <button id="btn-home-view-all" type="button" class="btn-ghost btn-compact" aria-label="Vedi tutti">Vedi tutti</button>
+            </div>
+            <div id="home-open-jobs" class="space-y-3"></div>
+          </div>
+
+          <div class="surface">
+            <div class="surface-head">
+              <div>
+                <h3 class="surface-title">Ultimi movimenti</h3>
+                <p class="text-sm text-slate-500">Entrate e uscite recenti</p>
+              </div>
+            </div>
+            <div id="home-recent-movements" class="space-y-2"></div>
+          </div>
+        </section>
+
+        <!-- JOBS LIST VIEW -->
+        <section id="view-jobs" class="view-section hidden">
+          <div class="screen-head">
+            <h1 class="screen-title">Lavori</h1>
+            <button id="btn-jobs-new" type="button" class="btn-main btn-compact">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+
+          <div class="surface space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="input-label">Cerca cliente o commessa</label>
+                <input id="jobs-search" type="search" class="input" placeholder="Es. Rossi · CANTIERE_A" />
+              </div>
+              <div class="flex items-end gap-2">
+                <div class="flex-1">
+                  <label class="input-label">Filtro</label>
+                  <div class="filter-chips" id="jobs-filters">
+                    <button type="button" class="chip active" data-filter="open">Aperti</button>
+                    <button type="button" class="chip" data-filter="closed">Chiusi</button>
+                    <button type="button" class="chip" data-filter="archived">Archiviati</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="jobs-list" class="space-y-2"></div>
+          </div>
+        </section>
+
+        <!-- JOB DETAIL VIEW -->
+        <section id="view-job-detail" class="view-section hidden">
+          <div class="screen-head">
+            <div class="flex items-center gap-2">
+              <button id="btn-job-back" type="button" class="btn-ghost btn-compact" aria-label="Indietro">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div>
+                <h1 id="job-title" class="screen-title">-</h1>
+                <span id="job-status" class="badge warning">Aperto</span>
+              </div>
+            </div>
+            <button id="btn-job-delete" type="button" class="btn-ghost danger btn-compact" aria-label="Elimina">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+
+          <p class="text-sm text-slate-500" id="job-meta">-</p>
+
+          <!-- KPI -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="kpi-card">
+              <p class="kpi-label">Residuo</p>
+              <p id="job-due" class="kpi-value text-indigo-600">0 €</p>
+            </div>
+            <div class="kpi-card">
+              <p class="kpi-label">Incassato</p>
+              <p id="job-paid" class="kpi-value text-emerald-600">0 €</p>
+            </div>
+            <div class="kpi-card">
+              <p class="kpi-label">Totale</p>
+              <p id="job-total" class="kpi-value">0 €</p>
+            </div>
+          </div>
+
+          <!-- DETAIL TABS -->
+          <div class="surface">
+            <div class="segment" id="job-detail-tabs">
+              <button type="button" class="segment-btn active" data-tab="incassi">Incassi</button>
+              <button type="button" class="segment-btn" data-tab="acquisti">Acquisti</button>
+              <button type="button" class="segment-btn" data-tab="righe">Righe</button>
+              <button type="button" class="segment-btn" data-tab="note">Note</button>
+            </div>
+
+            <div id="job-incassi" class="job-panel"></div>
+            <div id="job-acquisti" class="job-panel hidden"></div>
+            <div id="job-righe" class="job-panel hidden"></div>
+            <div id="job-note" class="job-panel hidden">
+              <label class="input-label">Note interne</label>
+              <textarea id="job-note-input" class="input" rows="3" placeholder="Annota qui..."></textarea>
+              <div class="flex justify-end mt-2">
+                <button id="btn-save-job-note" type="button" class="btn-soft">Salva</button>
+              </div>
+            </div>
+
+            <div class="action-bar">
+              <button id="btn-add-payment" type="button" class="btn-main flex-1">
+                <i class="fa-solid fa-plus"></i>
+                <span>Incasso</span>
+              </button>
+              <button id="btn-add-purchase" type="button" class="btn-soft flex-1">
+                <i class="fa-solid fa-shopping-cart"></i>
+                <span>Acquisto</span>
+              </button>
+              <button id="btn-add-line" type="button" class="btn-soft flex-1">
+                <i class="fa-solid fa-list"></i>
+                <span>Riga</span>
+              </button>
+              <button id="btn-job-report-pdf" type="button" class="btn-soft flex-1" title="Scarica PDF">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span>PDF avanzamento</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- QUOTES VIEW -->
+        <section id="view-quotes" class="view-section hidden">
+          <div class="screen-head">
+            <h1 class="screen-title">Preventivi</h1>
+            <button id="btn-open-quote-wizard" type="button" class="btn-main btn-compact">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- QUOTE LIST -->
+            <div class="surface lg:col-span-1 space-y-3">
+              <input id="quotes-search" type="search" class="input" placeholder="Cerca cliente..." />
+              <div id="quotes-list" class="space-y-2"></div>
+            </div>
+
+            <!-- QUOTE EDITOR -->
+            <div class="lg:col-span-2 space-y-4">
+              <div id="quote-empty" class="surface text-center py-8">
+                <i class="fa-solid fa-file-circle-question text-4xl text-slate-300"></i>
+                <p class="text-slate-500 mt-2">Seleziona o crea un preventivo</p>
+              </div>
+
+              <div id="quote-wizard" class="surface space-y-3 hidden">
+                <div class="flex justify-between items-start gap-3">
+                  <div>
+                    <h3 class="surface-title">Nuovo preventivo</h3>
+                    <p class="text-xs text-slate-500">Step <span id="wizard-step-label">1</span> di 2</p>
+                  </div>
+                  <button id="btn-cancel-wizard" type="button" class="btn-ghost btn-compact">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+                <div id="wizard-step-1" class="space-y-2">
+                  <label class="input-label">Cliente</label>
+                  <input id="wizard-cliente" type="text" class="input" placeholder="Inserisci cliente" autocomplete="off" />
+                  <div id="wizard-cliente-suggest" class="suggest hidden"></div>
+                  <button id="btn-wizard-next" type="button" class="btn-main w-full">Avanti</button>
+                </div>
+                <div id="wizard-step-2" class="space-y-2 hidden">
+                  <label class="input-label">Commessa / Cantiere</label>
+                  <input id="wizard-commessa" type="text" class="input" placeholder="Inserisci commessa" />
+                  <div class="flex gap-2">
+                    <button id="btn-wizard-back" type="button" class="btn-soft flex-1">Indietro</button>
+                    <button id="btn-wizard-create" type="button" class="btn-main flex-1">Crea</button>
+                  </div>
+                </div>
+              </div>
+
+              <div id="quote-editor" class="space-y-4 hidden">
+                <div class="surface">
+                  <div class="flex items-start justify-between gap-3 mb-3">
+                    <div>
+                      <p class="eyebrow">Preventivo</p>
+                      <h3 class="surface-title">#<span id="qe-number">-</span></h3>
+                      <p class="text-xs text-slate-500">Creato il <span id="qe-date">-</span></p>
+                    </div>
+                    <span id="qe-status" class="badge">DRAFT</span>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label class="input-label">Cliente</label>
+                      <input id="qe-client" type="text" class="input" />
+                    </div>
+                    <div>
+                      <label class="input-label">Commessa</label>
+                      <input id="qe-commessa" type="text" class="input" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="input-label">Note</label>
+                    <textarea id="qe-notes" class="input" rows="2"></textarea>
+                  </div>
+                </div>
+
+                <div class="surface">
+                  <div class="flex items-center justify-between mb-3">
+                    <h4 class="surface-title">Righe</h4>
+                    <button id="btn-add-row" type="button" class="btn-soft btn-compact">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                  <div id="quote-rows" class="space-y-2"></div>
+                </div>
+
+                <div class="surface sticky-footer">
+                  <div class="grid grid-cols-2 gap-3 text-sm mb-2">
+                    <div class="flex justify-between"><span>Imponibile</span><strong id="qt-taxable">0 €</strong></div>
+                    <div class="flex justify-between"><span>IVA</span><strong id="qt-iva">0 €</strong></div>
+                  </div>
+                  <div class="flex justify-between items-center text-lg font-bold">
+                    <span>Totale</span>
+                    <span id="qt-total" class="text-indigo-600">0 €</span>
+                  </div>
+                </div>
+
+                <div class="surface actions-grid">
+                  <button id="btn-quote-print" type="button" class="btn-soft" title="Stampa">
+                    <i class="fa-solid fa-print"></i>
+                  </button>
+                  <button id="btn-quote-pdf" type="button" class="btn-soft" title="Scarica PDF">
+                    <i class="fa-solid fa-file-pdf"></i>
+                  </button>
+                  <button id="btn-quote-duplicate" type="button" class="btn-soft" title="Duplica">
+                    <i class="fa-solid fa-copy"></i>
+                  </button>
+                  <button id="btn-quote-reset" type="button" class="btn-soft" title="Reset">
+                    <i class="fa-solid fa-refresh"></i>
+                  </button>
+                  <button id="btn-quote-delete" type="button" class="btn-ghost danger" title="Elimina">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                  <button id="btn-quote-lock" type="button" class="btn-main" title="Blocca">
+                    <i class="fa-solid fa-lock"></i>
+                  </button>
+                  <button id="btn-quote-unlock" type="button" class="btn-soft hidden" title="Sblocca">
+                    <i class="fa-solid fa-unlock"></i>
+                  </button>
+                  <button id="btn-quote-confirm" type="button" class="btn-main col-span-2" title="Converti a lavoro">
+                    Converti in lavoro
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- HISTORY VIEW -->
+        <section id="view-history" class="view-section hidden">
+          <h1 class="screen-title">Storico acquisti</h1>
+
+          <!-- A) NUOVO ACQUISTO -->
+          <div class="surface space-y-3">
+            <h3 class="surface-title">Nuovo acquisto</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 relative">
+              <div>
+                <label class="input-label">Data</label>
+                <input id="history-new-date" type="date" class="input" />
+              </div>
+              <div class="relative">
+                <label class="input-label">Fornitore</label>
+                <input id="history-new-supplier" type="text" class="input" autocomplete="off" placeholder="Es. Ferramenta XYZ" />
+                <div id="history-supplier-suggest" class="suggest hidden"></div>
+              </div>
+              <div>
+                <label class="input-label">Prodotto / Descrizione</label>
+                <input id="history-new-product" type="text" class="input" placeholder="Es. Cavo FG7 3x2.5" />
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="input-label">Quantità</label>
+                  <input id="history-new-qty" type="number" step="0.01" class="input" value="1" />
+                </div>
+                <div>
+                  <label class="input-label">Unità</label>
+                  <select id="history-new-unit" class="input">
+                    <option value="pz">pz</option>
+                    <option value="m">m</option>
+                    <option value="kg">kg</option>
+                    <option value="sacchi">sacchi</option>
+                    <option value="altro">altro</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="input-label">Prezzo unitario</label>
+                <input id="history-new-unitprice" type="number" step="0.01" class="input" value="0" />
+              </div>
+              <div>
+                <label class="input-label">Totale (calcolato)</label>
+                <input id="history-new-total" type="text" class="input" readonly />
+              </div>
+              <div>
+                <label class="input-label">Commessa (opzionale)</label>
+                <input id="history-new-commessa" type="text" class="input" placeholder="CODICE" />
+              </div>
+              <div class="lg:col-span-3">
+                <label class="input-label">Note</label>
+                <input id="history-new-note" type="text" class="input" />
+              </div>
+            </div>
+            <div class="flex justify-end">
+              <button id="btn-history-save-purchase" type="button" class="btn-main">Salva acquisto</button>
+            </div>
+          </div>
+
+          <!-- B) FILTRI + RISULTATI -->
+          <div class="surface space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label class="input-label">Prodotto</label>
+                <input id="history-search" type="search" class="input" placeholder="Cavo, quadro..." />
+              </div>
+              <div>
+                <label class="input-label">Fornitore</label>
+                <input id="history-supplier" type="search" class="input" />
+              </div>
+              <div>
+                <label class="input-label">Anno</label>
+                <input id="history-year" type="number" class="input" placeholder="2025" min="2020" max="2099" />
+              </div>
+              <div>
+                <label class="input-label">Mese</label>
+                <select id="history-month" class="input">
+                  <option value="all">Tutti</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
+              </div>
+              <div>
+                <label class="input-label">Commessa</label>
+                <input id="history-commessa" type="text" class="input" placeholder="CODICE" />
+              </div>
+              <div>
+                <label class="input-label">Ordina per</label>
+                <select id="history-order" class="input">
+                  <option value="date-desc">Data (desc)</option>
+                  <option value="price">Prezzo</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2 justify-between">
+              <div class="flex gap-2">
+                <button id="btn-history-search" type="button" class="btn-main">Cerca</button>
+              </div>
+              <div class="flex gap-2">
+                <button id="btn-history-export-csv" type="button" class="btn-soft">Scarica CSV</button>
+                <button id="btn-history-export-json" type="button" class="btn-soft">Scarica JSON PrevIA</button>
+                <label class="btn-soft cursor-pointer" for="purchase-import">Import acquisti</label>
+              </div>
+            </div>
+            <div id="history-results" class="space-y-3"></div>
+          </div>
+        </section>
+
+        <!-- SETTINGS VIEW -->
+        <section id="view-settings" class="view-section hidden">
+          <h1 class="screen-title">Impostazioni</h1>
+
+          <div class="surface space-y-4">
+            <div>
+              <h3 class="surface-title">Dati azienda</h3>
+              <div class="mt-3">
+                <label class="input-label">Nome</label>
+                <input id="company-name-input" type="text" class="input" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label class="input-label">Indirizzo</label>
+                  <input id="company-address" type="text" class="input" />
+                </div>
+                <div>
+                  <label class="input-label">P.IVA</label>
+                  <input id="company-piva" type="text" class="input" />
+                </div>
+                <div>
+                  <label class="input-label">Telefono</label>
+                  <input id="company-phone" type="text" class="input" />
+                </div>
+                <div>
+                  <label class="input-label">Email</label>
+                  <input id="company-email" type="email" class="input" />
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <button id="btn-logo-upload" type="button" class="btn-soft" title="Upload logo">
+                  <i class="fa-solid fa-image mr-2"></i>Logo
+                </button>
+                <button id="btn-save-company" type="button" class="btn-main">Salva</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="surface space-y-3 mt-4">
+            <h3 class="surface-title">Backup & Dati</h3>
+            <div class="flex flex-wrap gap-2">
+              <button id="btn-backup" type="button" class="btn-soft">
+                <i class="fa-solid fa-download"></i>
+                <span>Backup</span>
+              </button>
+              <label class="btn-soft cursor-pointer" for="file-import">
+                <i class="fa-solid fa-upload"></i>
+                <span>Importa</span>
+              </label>
+              <button id="btn-export-job" type="button" class="btn-soft">
+                <i class="fa-solid fa-box"></i>
+                <span>Esporta lavoro</span>
+              </button>
+              <button id="btn-diagnostic" type="button" class="btn-soft">
+                <i class="fa-solid fa-stethoscope"></i>
+                <span>Diagnostica</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="surface space-y-3 mt-4">
+            <h3 class="surface-title text-rose-600">Pericolo</h3>
+            <p class="text-sm text-slate-500">Digita RESET per azzerare tutto.</p>
+            <button id="btn-reset-all" type="button" class="btn-danger">Reset totale</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- BOTTOM NAV (mobile only) -->
+    <nav id="bottom-nav" class="bottom-nav">
+      <button type="button" class="nav-btn" data-tab="home" aria-label="Home"><i class="fa-solid fa-house"></i></button>
+      <button type="button" class="nav-btn" data-tab="jobs" aria-label="Lavori"><i class="fa-solid fa-briefcase"></i></button>
+      <button type="button" class="nav-btn" data-tab="quotes" aria-label="Preventivi"><i class="fa-solid fa-file-invoice-dollar"></i></button>
+      <button type="button" class="nav-btn" data-tab="history" aria-label="Storico"><i class="fa-solid fa-chart-line"></i></button>
+      <button type="button" class="nav-btn" data-tab="settings" aria-label="Altro"><i class="fa-solid fa-gear"></i></button>
+    </nav>
+
+    <!-- SHEET -->
+    <div id="sheet-overlay" class="sheet hidden" aria-hidden="true">
+      <div class="sheet-backdrop"></div>
+      <div class="sheet-panel">
+        <div class="sheet-header">
+          <div>
+            <p class="eyebrow" id="sheet-subtitle">Azioni</p>
+            <h3 id="sheet-title" class="section-title">Titolo</h3>
+          </div>
+          <button id="sheet-close" type="button" class="btn-ghost btn-compact" aria-label="Chiudi"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="sheet-body" class="sheet-body"></div>
+        <div class="sheet-footer">
+          <button id="sheet-secondary" type="button" class="btn-soft">Annulla</button>
+          <button id="sheet-primary" type="button" class="btn-main">Salva</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- PRINT ROOT -->
+  <div id="print-root" class="hidden"></div>
+
+  <!-- FILE INPUTS (hidden) -->
+  <input id="file-import" type="file" accept="application/json" class="hidden no-print" hidden />
+  <input id="logo-file-input" type="file" accept="image/*" class="hidden no-print" hidden />
+  <input id="purchase-import" type="file" accept="application/json" class="hidden no-print" hidden />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
